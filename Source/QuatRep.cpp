@@ -15,6 +15,51 @@ QuatRep QuatRep::operator*(QuatRep quat)
 	//hold.i = (s*quat.i)+(i*quat.s)+(j*quat.k)-(k*quat.j);
 	//hold.j = (s*quat.j)-(i*quat.k)+(j*quat.s)+(k*quat.i);
 	//hold.k = (s*quat.k)+(i*quat.j)-(j*quat.i)+(k*quat.s);
+	//hold.s = (s*quat.s)-(k*quat.k);
+	//hold.i = (s*quat.i)+(i*quat.s)-(j*quat.k)+(k*quat.j);
+	//hold.j = (s*quat.j)+(i*quat.k)+(j*quat.s)-(k*quat.i);
+	//hold.k = (s*quat.k)+(k*quat.s);
+	//hold.s = (s*quat.s)+(i*quat.j)+(j*quat.i);
+	//hold.i = (s*quat.i)+(i*quat.s);
+	//hold.j = (s*quat.j)+(j*quat.s);
+	//hold.k = (s*quat.k)+(k*quat.s);
+
+	//rule[0] = 2; rule[1] = 3; rule[5] = -3; rule[8] = -3; rule[9] = 1.5f; rule[10] = -2.25;
+	//hold.s = (s*quat.s)+(2.0f*i*quat.i)+(1.5f*j*quat.j);
+	//hold.i = (s*quat.i)+(i*quat.s)+(3.0f*i*quat.i)-(3.0f*i*quat.j)-(3.0f*j*quat.i)-(2.25f*j*quat.j);
+	//hold.j = (s*quat.j)+(j*quat.s);
+	//hold.k = (s*quat.k)+(k*quat.s);
+
+	//rule[0] = 1; rule[5] = 2; rule[8] = 2; rule[9] = -2; rule[10] = -4;
+	//hold.s = (s*quat.s)+(i*quat.i)-(4.0f*j*quat.j);
+	//hold.i = (s*quat.i)+(i*quat.s);
+	//hold.j = (s*quat.j)+(j*quat.s)+(2.0f*i*quat.j)+(2.0f*j*quat.i);
+	//hold.k = (s*quat.k)+(k*quat.s);
+
+	//hold.s = (s*quat.s)+(j*quat.j);
+	//hold.i = (s*quat.i)+(i*quat.s)+(i*quat.j)-(j*quat.i);
+	//hold.j = (s*quat.j)+(j*quat.s);
+	//hold.k = (s*quat.k)+(k*quat.s);
+
+	//hold.s = (s*quat.s)+(0.5f*i*quat.i);
+	//hold.i = (s*quat.i)+(i*quat.s);
+	//hold.j = (s*quat.j)+(j*quat.s)+(0.5f*i*quat.j)+(0.5f*j*quat.i);
+	//hold.k = (s*quat.k)+(k*quat.s);
+
+	//hold.s = (s*quat.s);
+	//hold.i = (s*quat.i)+(i*quat.s);
+	//hold.j = (s*quat.j)+(j*quat.s)+(i*quat.i);
+	//hold.k = (s*quat.k)+(k*quat.s);
+
+	//hold.s = (s*quat.s)+(i*quat.j)+(j*quat.i);
+	//hold.i = (s*quat.i)+(i*quat.s)+(j*quat.j);
+	//hold.j = (s*quat.j)+(j*quat.s)+(i*quat.i);
+	//hold.k = (s*quat.k)+(k*quat.s);
+
+	//hold.s = (s*quat.s)-(i*quat.i);
+	//hold.i = (s*quat.i)+(i*quat.s)+(2*i*quat.i);
+	//hold.j = (s*quat.j)+(j*quat.s);
+	//hold.k = (s*quat.k)+(k*quat.s);
 	return hold;
 }
 
@@ -122,10 +167,48 @@ public:
 		thread_local std::vector<SymExp> testInvGeoExpSysPre;
 
 		MultTable mt(3);
-		mt.At(0, 0, -1) = 1; mt.At(0, 1, 2) = -1; mt.At(0, 2, 1) = -1; 
-		mt.At(1, 1, -1) = 1; mt.At(1, 0, 2) = 1; mt.At(1, 2, 0) = 1;
-		mt.At(2, 2, -1) = -1; mt.At(2, 0, 1) = 1; mt.At(2, 1, 0) = -1;
+		//mt.At(0, 0, -1) = 1; mt.At(0, 1, 2) = -1; mt.At(0, 2, 1) = -1; 
+		//mt.At(1, 1, -1) = 1; mt.At(1, 0, 2) = 1; mt.At(1, 2, 0) = 1;
+		//mt.At(2, 2, -1) = -1; mt.At(2, 0, 1) = 1; mt.At(2, 1, 0) = -1;
 
+		//mt.At(0, 0, -1) = 0; mt.At(0, 1, 2) = 0; mt.At(0, 2, 1) = -1; 
+		//mt.At(1, 1, -1) = 0; mt.At(1, 0, 2) = 0; mt.At(1, 2, 0) = -1;
+		//mt.At(2, 2, -1) = 1; mt.At(2, 0, 1) = 1; mt.At(2, 1, 0) = 1;
+
+		//mt.At(1, 1, -1) = 1; mt.At(0, 1, 1) = 1; mt.At(1, 0, 1) = -1; 
+
+		QuatRep qBasis[4]; qBasis[0] = QuatRep(1,0,0,0); qBasis[1] = QuatRep(0,1,0,0); qBasis[2] = QuatRep(0,0,1,0); qBasis[3] = QuatRep(0,0,0,1);
+
+		for (int i = 0; i < 3; i++)
+		{
+			for (int j = 0; j < 3; j++)
+			{
+				QuatRep prod = qBasis[i+1]*qBasis[j+1];
+				mt.At(i, j, -1) = prod.s;
+				mt.At(i, j, 0) = prod.i;
+				mt.At(i, j, 1) = prod.j;
+				mt.At(i, j, 2) = prod.k;
+			}
+		}
+
+		//get new basis where basis vectors square to unitial subspace
+		std::vector<SymExp> newBasisEq; newBasisEq.resize(2);
+		newBasisEq[0].scalar = (QuatRep(0, 1, 0, 0)*QuatRep(0, 1, 0, 0)).i;
+		newBasisEq[1].scalar = (QuatRep(0, 1, 0, 0)*QuatRep(0, 1, 0, 0)).j;
+		newBasisEq[0].terms.push_back(Product(2,0));
+		newBasisEq[1].terms.push_back(Product(2, 1)); newBasisEq[1].terms.back().MultId(0);
+		newBasisEq[0].terms.push_back(Product((QuatRep(0,0,1,0)*QuatRep(0,0,1,0)).i,1,2));
+		newBasisEq[1].terms.push_back(Product((QuatRep(0,0,1,0)*QuatRep(0,0,1,0)).j,1,2));
+		newBasisEq[0].terms.push_back(Product((QuatRep(0,1,0,0)*QuatRep(0,0,1,0)).i,1,1));
+		newBasisEq[1].terms.push_back(Product((QuatRep(0,1,0,0)*QuatRep(0,0,1,0)).j,1,1));
+		newBasisEq[0].terms.push_back(Product((QuatRep(0,0,1,0)*QuatRep(0,1,0,0)).i,1,1));
+		newBasisEq[1].terms.push_back(Product((QuatRep(0,0,1,0)*QuatRep(0,1,0,0)).j,1,1));
+
+		std::vector<float> initial; initial.push_back(0.35f); initial.push_back(0.47f);
+		FlatSymExp test(newBasisEq);
+		FlatSymExp testGrad = test.Gradient();
+		initial = test.NewtonsMethodSolve(testGrad, initial);
+ 
 		std::vector<SymExp> varExp;
 		std::vector<SymExp> fixedExp;
 		varExp.push_back(SymExp(Product(1, 0, 1)));
@@ -136,6 +219,16 @@ public:
 		fixedExp.push_back(SymExp(Product(1, 5, 1)));
 		fixedExp.push_back(SymExp(Product(1, 6, 1)));
 		fixedExp.push_back(SymExp(Product(1, 7, 1)));
+
+			//look at ScalarMinimizing.png to find ideal c for exp(i + c)
+			//trying to minimize squared mag of exp(1000i + 1000c) maybe
+			//There is always some c such that squared mag of exp(xi + xc) derivative is 0 at x = 0, this is ideal c for complex and hyper complex
+			//This means that exp surface for exp(xi) is tangent to 1 + 0i + ...
+			//how does this relate to expansion of e^xi, in particular if exp(xi)'|_x=0 is tangent and exp(xj)'|_x=0 is tangent, is exp(x(ai + bj))'|_x=0 tangent for all a,b?
+			//this would probably be the ideal form because initially the exp curve isn't increasing, but maybers it increases more down the line, probs not tho
+
+			//still need a decent method for displaying looping spaces + handling looping rotation spaces
+			//Just do the association thing normal algebra exp (not mov/rot), where surface point space has a grid, where each grid points to the closest exp
 
 		sqrtSysPre = mt.Mult(varExp, varExp);
 
@@ -199,6 +292,8 @@ public:
 		d1 = QuatRep(0, 1, 0, 0);
 		d2 = QuatRep(0, 0, 1, 0);
 		r1 = (d1*d2 - d2*d1)*0.5f;
+		//r1 = QuatRep(0, 0, 0, 1);
+		//r1 = QuatRep(0, 0, 0, 0);
 
 		std::vector<SymExp> moveBase;
 		moveBase.push_back(SymExp(Product(d1.s, 0, 1))); moveBase[0].terms.push_back(Product(d2.s, 1, 1)); moveBase[0].Simplify();
@@ -392,35 +487,32 @@ QuatRep QuatRep::Inverse()
 	return QuatRep(fixed[0], fixed[1], fixed[2], fixed[3]);
 }*/
 
-/*QuatRep QuatRep::InvGeoExp()
+QuatRep QuatRep::InvGeoExpLR()
 {
-	return InvGeoExp(QuatRep(0, 0, 0, 0));
-}*/
-
-/*QuatRep QuatRep::InvGeoExp(QuatRep initial, int maxCount)
-{
-	if (!(std::abs(initial.s) < 8.0f && std::abs(initial.i) < 8.0f && std::abs(initial.j) < 8.0f && std::abs(initial.k) < 8.0f))
-		initial = QuatRep(0, 0, 0, 0);
-
-	invGeoExpSys.expScalar(0) = 1-s;
-	invGeoExpSys.expScalar(1) = -i;
-	invGeoExpSys.expScalar(2) = -j;
-	invGeoExpSys.expScalar(3) = -k;
-
-	//use fixed as initial guess
-	std::vector<float> fixed; fixed.resize(3);
-	fixed[0] = initial.i; fixed[1] = initial.j; fixed[2] = initial.k;// fixed[3] = 0;
-	fixed = invGeoExpSys.NewtonsMethodSolve(invGeoExpSysGrad, fixed, maxCount);
-
-	return QuatRep(0, fixed[0], fixed[1], fixed[2]);
-}*/
-
-QuatRep QuatRep::InvGeoExpRR()
-{
-	return InvGeoExpRR(QuatRep(0, 0, 0, 0));
+	return InvGeoExpLR(QuatRep(0, 0, 0, 0));
 }
 
-QuatRep QuatRep::InvGeoExpRR(QuatRep initial, int maxCount)
+QuatRep QuatRep::InvGeoExpLR(QuatRep initial, int maxCount)
+{
+	//use fixed as initial guess
+	std::vector<float> fixed; fixed.resize(3);
+	fixed[0] = initial.i; fixed[1] = initial.j; fixed[2] = initial.k; // fixed[3] = 0;
+	fixed.resize(4);
+
+	std::vector<float> target; target.resize(4); target[0] = s; target[1] = i; target[2] = j; target[3] = k;
+
+	fixed = NMnTomFunction(4, QuatGeoExpEval, QuatGeoExpGradient, fixed, target,maxCount);
+	fixed[3] = 0;
+
+	return QuatRep(0, fixed[0], fixed[1], fixed[2]);
+}
+
+QuatRep QuatRep::InvGeoExp()
+{
+	return InvGeoExp(QuatRep(0, 0, 0, 0));
+}
+
+QuatRep QuatRep::InvGeoExp(QuatRep initial, int maxCount)
 {
 	if (!(std::abs(initial.s) < 8 && std::abs(initial.i) < 8 && std::abs(initial.j) < 8 && std::abs(initial.k) < 8))
 		initial = QuatRep(0, 0, 0, 0);
@@ -475,10 +567,62 @@ QuatRep QuatRep::InvGeoExpRR(QuatRep initial, int maxCount)
 	return QuatRep(0, fixed[0], fixed[1], fixed[2]);
 }
 
-QuatRep QuatRep::LocalMove(float x, float y)
+//should precompute rot, but this function only gets called once anyways
+QuatRep QuatRep::LocalMove(float x, float y) //tries to use standardized distance based on how R*T (moving after rotation) compares to T*R (quotiented move)
 {
-	QuatRep decomp = InvGeoExpRR(QuatRep(0, 0, 0, 0), 80);
-	return QuatGeoExp(decomp.i,decomp.j,0)*QuatGeoExp(x,y,0)*QuatGeoExp(0,0,decomp.k);
+	QuatRep decomp = (*this).InvGeoExp();
+	QuatRep rot = QuatRotExp(decomp.k);
+
+	QuatRep unstandard = rot*QuatRep(0, x, y, 0);
+	float mag = (x*x)+(y*y);
+	if (mag == 0)
+		return (*this);
+	//we know R' is close to R at least
+	//maybe even assume R' = R
+
+	Vector2D<float> grad(3,4);
+
+	QuatRep iGrad = QuatRep(0, 1, 0, 0)*rot;
+	QuatRep jGrad = QuatRep(0, 0, 1, 0)*rot;
+
+	//cursed
+	grad.At(0, 0) = iGrad.s; grad.At(1, 0) = jGrad.s; grad.At(2, 0) = unstandard.s;
+	grad.At(0, 1) = iGrad.i; grad.At(1, 1) = jGrad.i; grad.At(2, 1) = unstandard.i;
+	grad.At(0, 2) = iGrad.j; grad.At(1, 2) = jGrad.j; grad.At(2, 2) = unstandard.j;
+	grad.At(0, 3) = iGrad.k; grad.At(1, 3) = jGrad.k; grad.At(2, 3) = unstandard.k;
+
+	std::vector<float> standardMove = NMSolveLinearSystem(grad);
+	float standardMag = (standardMove[0]*standardMove[0])+(standardMove[1]*standardMove[1]);
+	float coeff = glm::sqrt(mag/standardMag); //standardMag is the real mag, so we divide by it then multiply by mag to get movement with the intended mag
+	return (*this)*QuatGeoExp(x*coeff, y*coeff, 0);
+}
+
+QuatRep QuatRep::MoveAdjust(QuatRep camR)
+{
+	QuatRep rot = camR;
+
+	QuatRep unstandard = rot*QuatRep(0, i, j, 0);
+	float mag = (i*i)+(j*j);
+	if (mag == 0)
+		return (*this);
+	//we know R' is close to R at least
+	//maybe even assume R' = R
+
+	Vector2D<float> grad(3,4);
+
+	QuatRep iGrad = QuatRep(0, 1, 0, 0)*rot;
+	QuatRep jGrad = QuatRep(0, 0, 1, 0)*rot;
+
+	//cursed
+	grad.At(0, 0) = iGrad.s; grad.At(1, 0) = jGrad.s; grad.At(2, 0) = unstandard.s;
+	grad.At(0, 1) = iGrad.i; grad.At(1, 1) = jGrad.i; grad.At(2, 1) = unstandard.i;
+	grad.At(0, 2) = iGrad.j; grad.At(1, 2) = jGrad.j; grad.At(2, 2) = unstandard.j;
+	grad.At(0, 3) = iGrad.k; grad.At(1, 3) = jGrad.k; grad.At(2, 3) = unstandard.k;
+
+	std::vector<float> standardMove = NMSolveLinearSystem(grad);
+	float standardMag = (standardMove[0]*standardMove[0])+(standardMove[1]*standardMove[1]);
+	float coeff = glm::sqrt(standardMag/mag); //inverse of move, cause we are dividing by coeff of real move
+	return QuatRep(s, i*coeff, j*coeff, k);
 }
 
 float QuatRep::SqrMag()
@@ -633,6 +777,85 @@ void QuatGeoExpGradient(std::vector<float>& in, std::vector<float>& out)
 	for (int i = 12; i < 16; i++) out[i] = 0;
 }
 
+void QuatGeoExpLREval(std::vector<float>& in, std::vector<float>& out)
+{
+	in.resize(4); out.resize(4);
+
+	QuatRep moveQ = d1*in[0] + d2*in[1];
+	QuatRep rotQ = r1*in[2];
+
+	QuatRep move = QuatMovExp(in[0], in[1]);
+	QuatRep rot = QuatRotExp(in[2]);
+
+	QuatRep outHold = rot*move;
+
+	out[0] = outHold.s; out[1] = outHold.i;
+	out[2] = outHold.j; out[3] = outHold.k;
+}
+
+void QuatGeoExpLRGradient(std::vector<float>& in, std::vector<float>& out)
+{
+	in.resize(4);
+	out.resize(4*4);
+
+	QuatRep moveQ = d1*in[0] + d2*in[1];
+	QuatRep rotQ = r1*in[2];
+	//der is (zi + iz)/2! + (zzi + ziz + izz)/3! + ...
+	QuatRep moveHold[16];
+	moveHold[0] = QuatRep();
+	for (int i = 1; i < 16; i++)
+		moveHold[i] = (moveHold[i-1]*moveQ);
+
+	QuatRep rotHold[16];
+	rotHold[0] = QuatRep();
+	for (int i = 1; i < 16; i++)
+		rotHold[i] = (rotHold[i-1]*rotQ);
+
+	QuatRep move = QuatMovExp(in[0], in[1]);
+	QuatRep rot = QuatRotExp(in[2]);
+
+	QuatRep iGrad = QuatIDerLR(VectorRef<QuatRep>(16,moveHold), rot);
+	QuatRep jGrad = QuatJDerLR(VectorRef<QuatRep>(16,moveHold), rot);
+	QuatRep kGrad = QuatKDerLR(VectorRef<QuatRep>(16,rotHold), move);
+
+	out[0] = iGrad.s; out[1] = iGrad.i; out[2] = iGrad.j; out[3] = iGrad.k;
+	out[4] = jGrad.s; out[5] = jGrad.i; out[6] = jGrad.j; out[7] = jGrad.k;
+	out[8] = kGrad.s; out[9] = kGrad.i; out[10] = kGrad.j; out[11] = kGrad.k;
+
+	//iGrad = iGrad;
+	jGrad = jGrad.ProjectOffOf(iGrad); 
+	kGrad = kGrad.ProjectOffOf(iGrad).ProjectOffOf(jGrad);
+
+	glm::vec4 norm(1,1,1,1);
+	norm -= glm::vec4(iGrad.s,iGrad.i,iGrad.j,iGrad.k)*(glm::dot(norm,glm::vec4(iGrad.s,iGrad.i,iGrad.j,iGrad.k)/iGrad.SqrMag()));
+	norm -= glm::vec4(jGrad.s,jGrad.i,jGrad.j,jGrad.k)*(glm::dot(norm,glm::vec4(jGrad.s,jGrad.i,jGrad.j,jGrad.k)/jGrad.SqrMag()));
+	norm -= glm::vec4(kGrad.s,kGrad.i,kGrad.j,kGrad.k)*(glm::dot(norm,glm::vec4(kGrad.s,kGrad.i,kGrad.j,kGrad.k)/kGrad.SqrMag()));
+	if (glm::dot(norm, norm) < 0.00001f)
+	{
+		norm = glm::vec4(1.1f, 1, 1, 1);
+		norm -= glm::vec4(iGrad.s, iGrad.i, iGrad.j, iGrad.k)*(glm::dot(norm, glm::vec4(iGrad.s, iGrad.i, iGrad.j, iGrad.k)/iGrad.SqrMag()));
+		norm -= glm::vec4(jGrad.s, jGrad.i, jGrad.j, jGrad.k)*(glm::dot(norm, glm::vec4(jGrad.s, jGrad.i, jGrad.j, jGrad.k)/jGrad.SqrMag()));
+		norm -= glm::vec4(kGrad.s, kGrad.i, kGrad.j, kGrad.k)*(glm::dot(norm, glm::vec4(kGrad.s, kGrad.i, kGrad.j, kGrad.k)/kGrad.SqrMag()));
+	}
+	if (glm::dot(norm, norm) < 0.00001f)
+	{
+		norm = glm::vec4(1, 1.1f, 1, 1);
+		norm -= glm::vec4(iGrad.s, iGrad.i, iGrad.j, iGrad.k)*(glm::dot(norm, glm::vec4(iGrad.s, iGrad.i, iGrad.j, iGrad.k)/iGrad.SqrMag()));
+		norm -= glm::vec4(jGrad.s, jGrad.i, jGrad.j, jGrad.k)*(glm::dot(norm, glm::vec4(jGrad.s, jGrad.i, jGrad.j, jGrad.k)/jGrad.SqrMag()));
+		norm -= glm::vec4(kGrad.s, kGrad.i, kGrad.j, kGrad.k)*(glm::dot(norm, glm::vec4(kGrad.s, kGrad.i, kGrad.j, kGrad.k)/kGrad.SqrMag()));
+	}
+	if (glm::dot(norm, norm) < 0.00001f)
+	{
+		norm = glm::vec4(1, 1, 1.1f, 1);
+		norm -= glm::vec4(iGrad.s, iGrad.i, iGrad.j, iGrad.k)*(glm::dot(norm, glm::vec4(iGrad.s, iGrad.i, iGrad.j, iGrad.k)/iGrad.SqrMag()));
+		norm -= glm::vec4(jGrad.s, jGrad.i, jGrad.j, jGrad.k)*(glm::dot(norm, glm::vec4(jGrad.s, jGrad.i, jGrad.j, jGrad.k)/jGrad.SqrMag()));
+		norm -= glm::vec4(kGrad.s, kGrad.i, kGrad.j, kGrad.k)*(glm::dot(norm, glm::vec4(kGrad.s, kGrad.i, kGrad.j, kGrad.k)/kGrad.SqrMag()));
+	}
+
+	out[12] = norm.x; out[13] = norm.y; out[14] = norm.z; out[15] = norm.w;
+	for (int i = 12; i < 16; i++) out[i] = 0;
+}
+
 QuatRep QuatMovExp(float x, float y)
 {
 	QuatRep hold(1,0,0,0);
@@ -671,7 +894,6 @@ QuatRep QuatIDer(VectorRef<QuatRep> moveZ, QuatRep rot)
 	}
 	return hold*rot;
 }
-
 QuatRep QuatJDer(VectorRef<QuatRep> moveZ, QuatRep rot)
 {
 	QuatRep hold(0,0,0,0);
@@ -686,7 +908,6 @@ QuatRep QuatJDer(VectorRef<QuatRep> moveZ, QuatRep rot)
 	}
 	return hold*rot;
 }
-
 QuatRep QuatKDer(VectorRef<QuatRep> rotZ, QuatRep move)
 {
 	QuatRep hold(0,0,0,0);
@@ -700,4 +921,47 @@ QuatRep QuatKDer(VectorRef<QuatRep> rotZ, QuatRep move)
 		}
 	}
 	return move*hold;
+}
+
+QuatRep QuatIDerLR(VectorRef<QuatRep> moveZ, QuatRep rot)
+{
+	QuatRep hold(0,0,0,0);
+	float denom = 1;
+	for (int i = 0; i < moveZ.size(); i++)
+	{
+		denom *= i+1;
+		for (int j = 0; j <= i; j++)
+		{
+			hold += (moveZ[j]*d1*moveZ[i-j])/denom;
+		}
+	}
+	return rot*hold;
+}
+QuatRep QuatJDerLR(VectorRef<QuatRep> moveZ, QuatRep rot)
+{
+	QuatRep hold(0,0,0,0);
+	float denom = 1;
+	for (int i = 0; i < moveZ.size(); i++)
+	{
+		denom *= i+1;
+		for (int j = 0; j <= i; j++)
+		{
+			hold += (moveZ[j]*d2*moveZ[i-j])/denom;
+		}
+	}
+	return rot*hold;
+}
+QuatRep QuatKDerLR(VectorRef<QuatRep> rotZ, QuatRep move)
+{
+	QuatRep hold(0,0,0,0);
+	float denom = 1;
+	for (int i = 0; i < rotZ.size(); i++)
+	{
+		denom *= i+1;
+		for (int j = 0; j <= i; j++)
+		{
+			hold += (rotZ[j]*r1*rotZ[i-j])/denom;
+		}
+	}
+	return hold*move;
 }

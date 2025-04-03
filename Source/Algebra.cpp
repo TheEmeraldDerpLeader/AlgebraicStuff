@@ -279,13 +279,6 @@ void SolveForVar(SymExp& exp, int idToSolve, SymExp& numOut, SymExp& denomOut)
 	denomOut *= Product(1, 1, 1);
 }
 
-void DeterminantEq(int d)
-{
-	//todo
-	//use recursive definition
-	//ignore first row and column because scalar column will make that stuff 0
-}
-
 int CPPBindingTest()
 {
 	int p = 2;
@@ -475,24 +468,6 @@ Vector<float> Basis1FromArbUnitial(Vector<float>& arbUnitialRule, int dim)
 	return rule;
 }
 
-Vector<float> FindNilPotent(Vector<float>& rule, int dim)
-{
-	Vector<SymExp> symExp(dim+1); //the set of z^2 = 0 isn't necessarily a union of linear subspaces :/
-	for (int i = 0; i < dim; i++) //(a + bi + ...)(a + bi + ...) = 0
-	{
-		for (int j = i; j < dim; j++)
-		{
-			for (int k = 0; k < dim; k++)
-			{
-
-				//symExp[k].terms.push_back(Product(coeff, someid)); //if i != j, coeff*2
-				//symExp[k].terms.back().MultId(someid2);
-			}
-		}
-	}
-	return Vector<float>();
-}
-
 //true if found valid and nontrivial trans
 bool SearchIso(int dim, Vector<float>& trans, Vector<float>& transTest, FlatSymExp& isoRules, FlatSymExp& isoRulesGrad)
 {
@@ -517,10 +492,80 @@ bool SearchIso(int dim, Vector<float>& trans, Vector<float>& transTest, FlatSymE
 		return false;
 }
 
+std::vector<float> ConvergenceAtPoint(Vector2D<SymExp> grad, std::vector<int> ids, std::vector<float> p)
+{
+
+	int idC = grad.width;
+	int expC = grad.height;
+	Vector2D<float> vBasis(idC, idC);
+	Vector2D<float> wBasis(expC, expC);
+	Vector<float> wDivForV(expC);
+
+	Vector2D<float> gradEval = SclEvalVec2D(grad, ids, p);
+
+	//transform gradEval into new basis with ortho wi
+	int vCount = 0;
+	for (int i = 0; i < expC && vCount < idC; i++) //i is the grad row used, vCount is the number of vis currently found
+	{
+		//calculate starting vi and wi
+		VectorRef<float> initialV = vBasis.GetCol(vCount);
+		for (int j = 0; j < idC; j++)
+			initialV[j] = gradEval[(j*expC)+i];
+		VectorRef<float> initialW = wBasis.GetCol(vCount);
+		for (int i = 0; i < expC; i++)
+			initialW[i] = 0;
+
+		//calculate initialW from vs and ws
+		for (int i = 0; i < idC; i++)
+		{
+			VectorRef<float> wTemp = gradEval.GetCol(i);
+			for (int j = 0; j < expC; j++)
+				initialW[j] += wTemp[j]*initialV[i];
+		}
+
+		//antiproject wi and vi
+		for (int i = vCount-1; i >= 0; i--)
+		{
+			VectorRef<float> antiV = vBasis.GetCol(i);
+			VectorRef<float> antiW = wBasis.GetCol(i);
+			float coeff = 0;
+			for (int i = 0; i < expC; i++)
+				coeff += initialW[i]*antiW[i];
+			coeff /= wDivForV[i];
+			//project wi
+			for (int i = 0; i < expC; i++)
+				initialW[i] -= antiW[i]*coeff;
+			//project vi
+			for (int i = 0; i < idC; i++)
+				initialV[i] -= antiV[i]*coeff;
+		}
+
+		wDivForV[vCount] = 0;
+		for (int i = 0; i < expC; i++)
+			wDivForV[vCount] += initialW[i]*initialW[i];
+
+		//if wDivForV = 0, then vi and wi would be 0, so this vector should be skipped 
+		if (wDivForV[vCount] > 0.0000001 || wDivForV[vCount] < -0.0000001) //ferr is relevant
+			vCount++;
+	}
+
+	std::vector<float> out; out.resize(vCount);
+
+	//magnitude of vBasis direction determines convergence in that direction
+	for (int i = 0; i < vCount; i++)
+	{
+		float mag = 0;
+		for (int j = 0; j < idC; j++)
+			mag += vBasis[j+(i*idC)]*vBasis[j+(i*idC)];
+
+		out[i] = mag;
+	}
+
+	return out;
+}
+
 void LeTest()
 {
-	
-
 	Vector<float> solver(27); 
 	//solver[0] = 1; solver[13] = 1; solver[26] = 1;
 	solver[0] = 1; solver[13] = 1; solver[17] = 1; solver[23] = 1; solver[25] = -1;
@@ -572,14 +617,16 @@ void LeTest()
 	 
 	//for each (ij) = -(ji), there is redundancy in the transformation subsurface
 	//i^2 = - i^2 = 0 (reduction of 1)
-	for (int i = 0; i < dim+1; i++)
-		unitRestrict.Add(i+0, 0);
-	//ij = -ji (reduction of 2)
 	//for (int i = 0; i < dim+1; i++)
-	//	unitRestrict.Add(i+3, SymExp(Product(-1,i+6)));
+	//	unitRestrict.Add(i+0, 0);
+	//ij = -ji (reduction of 2)
+	for (int i = 0; i < dim+1; i++)
+		unitRestrict.Add(i+3, SymExp(Product(-1,i+6)));
 	//j^2 = 0
 	//for (int i = 0; i < dim+1; i++)
 	//	unitRestrict.Add(i+9, 0);
+	//i reducible
+	//unitRestrict.Add(10, 0);
 
 	//adding eq constraints rather than substituting variables
 	//i^2 = - i^2 = 0 (reduction of 1)
@@ -598,7 +645,7 @@ void LeTest()
 	for (int i = 0; i < assocEq.size(); i++)
 		assocEq[i] = assocEq[i].Eval(unitRestrict);
 
-	for (int count = 0; count < 1600; count++)
+	for (int count = 0; count < 16000; count++)
 	{
 		//reset rule fail counts
 		for (int i = 0; i < ruleFails.size(); i++) ruleFails[i] = 0;
@@ -647,21 +694,24 @@ void LeTest()
 			solver[0] = 1; solver[4] = 1; solver[8] = 1; solver[10] = 1;
 			solver[14] = 1; solver[20] = 1;
 			rule = Basis1FromArbUnitial(solver, 3);
-			rule[2] = 0; rule[10] = 1;
 			//continue;
 		}
 		if (count == 6)
 		{
-			continue;
 			for (int i = 0; i < 12; i++) rule[i] = 0;
 			//rule[0] = -1; rule[1] = 2; rule[3] = -1; rule[4] = 1; rule[5] = 1; rule[6] = 1; rule[7] = -1; rule[8] = 1; rule[9] = 1;
 			
 			rule[10] = 1; rule[11] = 0.01f; //this hits both 4 and 5
 		}
+
 		//rule[0] = 0; rule[1] = 0; //zero div algs may give NaN outputs in NM, but can still determine if spaces are different or same maybe?
 		//for (int i = 0; i < 12; i++) rule[i] = rules[i]; //rule[0] = -1; rule[1] = 2; rule[2] = 1; rule[3] = 1; rule[5] = 1; rule[6] = 1; rule[8] = 1; rule[9] = -1; rule[10] = 1;
 		//for (int i = 0; i < 12; i++) rule[i] = 0; rule[2] = 1; rule[3] = -1; rule[6] = -1; rule[10] = -1;
 		//for (int i = 0; i < 12; i++) rule[i] = 0.3f; rule[2] = 2.5f; rule[4] = 1; rule[7] = -1; rule[9] = 1;
+
+		if (count <= 6)
+			continue;
+
 		if (count > 5)
 		{
 			for (int i = 0; i < unitRestrict.lookup.size(); i++)
@@ -670,7 +720,8 @@ void LeTest()
 				else
 					rule[unitRestrict.lookup[i]] = -rule[unitRestrict.exps[i].terms[0].ids[0]];
 
-			rule = NMnTom(assocEq, ruleIds, rule);
+			//rule = NMnTom(assocEq, ruleIds, rule);
+			rule = NMnTomFailSlowConvergence(assocEq, ruleIds, rule, 0, 0.1f, 4, 0.000001);
 			for (int i = 0; i < unitRestrict.lookup.size(); i++) //NM won't update substituted values
 				if (unitRestrict.exps[i].terms.size() != 0)
 					rule[unitRestrict.lookup[i]] = -rule[unitRestrict.exps[i].terms[0].ids[0]];
@@ -687,6 +738,21 @@ void LeTest()
 				break;
 			}
 		}
+
+		//ignore rules that are close to slow conv areas
+		std::vector<float> gradDebug = ConvergenceAtPoint(Gradient(assocEq), ruleIds, rule);
+		for (int i = 0; i < gradDebug.size(); i++)
+			for (int j = i-1; j >= 0; j--)
+				if (gradDebug[j+1] > gradDebug[j])
+				{
+					float hold = gradDebug[j+1]; gradDebug[j+1] = gradDebug[j]; gradDebug[j] = hold;
+				}
+				else break;
+		//if (count <= 6)
+		//	conv = false;
+		if (gradDebug.back()/gradDebug[0] < 0.1f && count > 5)
+			conv = false;
+
 		if (conv == false)
 			continue;
 
@@ -731,7 +797,7 @@ void LeTest()
 		}
 		
 		bool wasIso = false;
-		for (int f = 0; f < 200000; f++)
+		for (int f = 0; f < 200000; f++) //200000
 		{
 			if (count <= 5)
 				break;
@@ -784,9 +850,8 @@ void LeTest()
 			ruleIsos.push_back(0);
 		}
 	}
- 	std::cout << rules.size()/rule.size() << '\n';
 
-	
+ 	std::cout << rules.size()/rule.size() << '\n';
 }
 
 /*solutions for p = 2

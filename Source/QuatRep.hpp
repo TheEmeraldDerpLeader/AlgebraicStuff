@@ -35,14 +35,15 @@ public:
 	//QuatRep InvExp();
 	//QuatRep DirectInvExp();
 
-	//QuatRep InvGeoExp(); //i,j for translation, k for rotation, s for normalization
-	//QuatRep InvGeoExp(QuatRep initial, int maxCount = 80);
-	QuatRep InvGeoExpRR(); //Gives InvGeoExp for rotation on the right side
-	QuatRep InvGeoExpRR(QuatRep initial, int maxCount = 80);
+	QuatRep InvGeoExpLR();
+	QuatRep InvGeoExpLR(QuatRep initial, int maxCount = 80);
+	QuatRep InvGeoExp(); //Gives InvGeoExp for rotation on the right side
+	QuatRep InvGeoExp(QuatRep initial, int maxCount = 80);
 
 	QuatRep InvTestExp();
 
 	QuatRep LocalMove(float x, float y);
+	QuatRep MoveAdjust(QuatRep cam); //converts (*this) as a vector in exp dist to local move dist
 
 	float SqrMag();
 	float Dot(QuatRep q);
@@ -61,9 +62,16 @@ QuatRep QuatGeoExp(QuatRep v); //don't have float3, so just use last 3 component
 
 void QuatGeoExpEval(std::vector<float>& in, std::vector<float>& out);
 void QuatGeoExpGradient(std::vector<float>& in, std::vector<float>& out);
+void QuatGeoExpLREval(std::vector<float>& in, std::vector<float>& out);
+void QuatGeoExpLRGradient(std::vector<float>& in, std::vector<float>& out);
+
 
 QuatRep QuatMovExp(float x, float y);
 QuatRep QuatRotExp(float r);
 QuatRep QuatIDer(VectorRef<QuatRep> moveZ, QuatRep rot);
 QuatRep QuatJDer(VectorRef<QuatRep> moveZ, QuatRep rot);
 QuatRep QuatKDer(VectorRef<QuatRep> rotZ, QuatRep move);
+
+QuatRep QuatIDerLR(VectorRef<QuatRep> moveZ, QuatRep rot);
+QuatRep QuatJDerLR(VectorRef<QuatRep> moveZ, QuatRep rot);
+QuatRep QuatKDerLR(VectorRef<QuatRep> rotZ, QuatRep move);

@@ -47,4 +47,19 @@ ii = -ii				 - | - | - | + | + | + |
 ij = -ji				 + | + | + | + | + | + |
 both					 - | - | - | + | + | + |
 All						 - | - | + | - | - | - |
-	
+
+
+Ignore slow conv 		 ( - always means 0 hits)
+default 				 + | + | - | + | + | - |
+ii = 0					 - | - | - | + | + | + |
+ij = -ji				 + | + | + | + | + | + |
+both					 - | - | - | + | + | + |
+All						 - | - | + | + | + | + |
+
+Counts in full random test, ignore slow
+default			4 | 4 | 4
+ii = 0			2 | 2 | 2  lowering cutoff gives 3, and ridiculously increases time
+ij = -ji		4 | 5 | 6
+both			5 | 5 | 7 test this one
+All 			1 | 1 | 1
+j^2 = 0i + ... 	5 |
