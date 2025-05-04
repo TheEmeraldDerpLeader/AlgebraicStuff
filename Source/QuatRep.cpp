@@ -7,10 +7,10 @@
 QuatRep QuatRep::operator*(QuatRep quat)
 {
 	QuatRep hold;
-	hold.s = (s*quat.s)+(i*quat.i)+(j*quat.j)-(k*quat.k);
-	hold.i = (s*quat.i)+(i*quat.s)+(j*quat.k)-(k*quat.j);
-	hold.j = (s*quat.j)-(i*quat.k)+(j*quat.s)+(k*quat.i);
-	hold.k = (s*quat.k)-(i*quat.j)+(j*quat.i)+(k*quat.s);
+	//hold.s = (s*quat.s)+(i*quat.i)+(j*quat.j)-(k*quat.k);
+	//hold.i = (s*quat.i)+(i*quat.s)+(j*quat.k)-(k*quat.j);
+	//hold.j = (s*quat.j)-(i*quat.k)+(j*quat.s)+(k*quat.i);
+	//hold.k = (s*quat.k)-(i*quat.j)+(j*quat.i)+(k*quat.s);
 	//hold.s = (s*quat.s)-(i*quat.i)-(j*quat.j)-(k*quat.k);
 	//hold.i = (s*quat.i)+(i*quat.s)+(j*quat.k)-(k*quat.j);
 	//hold.j = (s*quat.j)-(i*quat.k)+(j*quat.s)+(k*quat.i);
@@ -36,30 +36,41 @@ QuatRep QuatRep::operator*(QuatRep quat)
 	//hold.j = (s*quat.j)+(j*quat.s)+(2.0f*i*quat.j)+(2.0f*j*quat.i);
 	//hold.k = (s*quat.k)+(k*quat.s);
 
+	//Cool space
 	//hold.s = (s*quat.s)+(j*quat.j);
 	//hold.i = (s*quat.i)+(i*quat.s)+(i*quat.j)-(j*quat.i);
 	//hold.j = (s*quat.j)+(j*quat.s);
 	//hold.k = (s*quat.k)+(k*quat.s);
-
-	//hold.s = (s*quat.s)+(0.5f*i*quat.i);
-	//hold.i = (s*quat.i)+(i*quat.s);
-	//hold.j = (s*quat.j)+(j*quat.s)+(0.5f*i*quat.j)+(0.5f*j*quat.i);
-	//hold.k = (s*quat.k)+(k*quat.s);
+	 
+	//complex numbers but i' = 1 + i
+	//hold.s = (s*quat.s)-(2*i*quat.i)-(j*quat.k)+(k*quat.j)-(j*quat.j)-(k*quat.k);
+	//hold.i = (s*quat.i)+(i*quat.s)+(2*i*quat.i)+(j*quat.k)-(k*quat.j);
+	//hold.j = (s*quat.j)+(j*quat.s)+(i*quat.j)+(j*quat.i)-(i*quat.k)+(k*quat.i);
+	//hold.k = (s*quat.k)+(k*quat.s)+(i*quat.j)-(j*quat.i)+(i*quat.k)+(k*quat.i);
 
 	//hold.s = (s*quat.s);
 	//hold.i = (s*quat.i)+(i*quat.s);
 	//hold.j = (s*quat.j)+(j*quat.s)+(i*quat.i);
 	//hold.k = (s*quat.k)+(k*quat.s);
 
-	//hold.s = (s*quat.s)+(i*quat.j)+(j*quat.i);
-	//hold.i = (s*quat.i)+(i*quat.s)+(j*quat.j);
-	//hold.j = (s*quat.j)+(j*quat.s)+(i*quat.i);
-	//hold.k = (s*quat.k)+(k*quat.s);
+	//not one of the algs from the paper, this is i2 = j, j2 = i, ij = ji = 1
+	hold.s = (s*quat.s)+(i*quat.j)+(j*quat.i);
+	hold.i = (s*quat.i)+(i*quat.s)+(j*quat.j);
+	hold.j = (s*quat.j)+(j*quat.s)+(i*quat.i);
+	hold.k = (s*quat.k)+(k*quat.s);
 
 	//hold.s = (s*quat.s)-(i*quat.i);
 	//hold.i = (s*quat.i)+(i*quat.s)+(2*i*quat.i);
 	//hold.j = (s*quat.j)+(j*quat.s);
 	//hold.k = (s*quat.k)+(k*quat.s);
+
+
+	//circle times line
+	//hold.s = (s*quat.s)-(i*quat.i);
+	//hold.i = (s*quat.i)+(i*quat.s);
+	//hold.j = (s*quat.j)+(j*quat.s)+(i*quat.j)+(j*quat.i);
+	//hold.k = (s*quat.k)+(k*quat.s);
+
 	return hold;
 }
 
@@ -154,6 +165,10 @@ thread_local QuatRep d1;
 thread_local QuatRep d2; 
 thread_local QuatRep r1; //have r1 = exp(del*d1)*exp(del*d2) - exp(del*(d1+d2)) | lim => 0 == d1*d2 - 0.5*(d1d2 + d2d1) = 0.5(d1d2 - d2d1) 
 //static QuatRep r2; exp(1) can never result from d1*d2, as it would imply d1 and d2 are comm (d1 = s*d2^-1), so we never have more than 1 rotation dir
+
+thread_local QuatRep QuatRepDirs::d1;
+thread_local QuatRep QuatRepDirs::d2;
+thread_local QuatRep QuatRepDirs::r1;
 
 struct __SetupQuat_
 {
@@ -290,10 +305,24 @@ public:
 		*/
 
 		d1 = QuatRep(0, 1, 0, 0);
-		d2 = QuatRep(0, 0, 1, 0);
+		d2 = QuatRep(0, 0.2f, 1, 0);
+		//d1 = QuatRep(0, -0.7071, 0.7071, 0);
+		d1 = AntiScaleDir(d1);
+		//d2 = QuatRep(0, 0.7071, 0.7071, 0);
+		d2 = AntiScaleDir(d2);
 		r1 = (d1*d2 - d2*d1)*0.5f;
 		//r1 = QuatRep(0, 0, 0, 1);
 		//r1 = QuatRep(0, 0, 0, 0);
+		//r1 = AntiScaleDir(r1); pretty sure can't do this
+		if (r1.ProjectOffOf(d1).ProjectOffOf(d2).SqrMag() < 0.0001f)
+			r1 = QuatRep(0, 0, 0, 0);
+
+
+		QuatRepDirs::d1 = d1;
+		QuatRepDirs::d2 = d2;
+		QuatRepDirs::r1 = r1;
+
+		//somehow this isn't 100% like nonbasis change, so something is broken in calculations, especially with regards to rotation
 
 		std::vector<SymExp> moveBase;
 		moveBase.push_back(SymExp(Product(d1.s, 0, 1))); moveBase[0].terms.push_back(Product(d2.s, 1, 1)); moveBase[0].Simplify();
@@ -573,7 +602,7 @@ QuatRep QuatRep::LocalMove(float x, float y) //tries to use standardized distanc
 	QuatRep decomp = (*this).InvGeoExp();
 	QuatRep rot = QuatRotExp(decomp.k);
 
-	QuatRep unstandard = rot*QuatRep(0, x, y, 0);
+	QuatRep unstandard = rot*((d1*x)+(d2*y));
 	float mag = (x*x)+(y*y);
 	if (mag == 0)
 		return (*this);
@@ -582,8 +611,8 @@ QuatRep QuatRep::LocalMove(float x, float y) //tries to use standardized distanc
 
 	Vector2D<float> grad(3,4);
 
-	QuatRep iGrad = QuatRep(0, 1, 0, 0)*rot;
-	QuatRep jGrad = QuatRep(0, 0, 1, 0)*rot;
+	QuatRep iGrad = d1*rot;
+	QuatRep jGrad = d2*rot;
 
 	//cursed
 	grad.At(0, 0) = iGrad.s; grad.At(1, 0) = jGrad.s; grad.At(2, 0) = unstandard.s;
@@ -594,14 +623,14 @@ QuatRep QuatRep::LocalMove(float x, float y) //tries to use standardized distanc
 	std::vector<float> standardMove = NMSolveLinearSystem(grad);
 	float standardMag = (standardMove[0]*standardMove[0])+(standardMove[1]*standardMove[1]);
 	float coeff = glm::sqrt(mag/standardMag); //standardMag is the real mag, so we divide by it then multiply by mag to get movement with the intended mag
-	return (*this)*QuatGeoExp(x*coeff, y*coeff, 0);
+	return (*this)*QuatGeoExp(x,y,0);
 }
 
 QuatRep QuatRep::MoveAdjust(QuatRep camR)
 {
 	QuatRep rot = camR;
 
-	QuatRep unstandard = rot*QuatRep(0, i, j, 0);
+	QuatRep unstandard = rot*((d1*i)+(d2*j));
 	float mag = (i*i)+(j*j);
 	if (mag == 0)
 		return (*this);
@@ -610,8 +639,8 @@ QuatRep QuatRep::MoveAdjust(QuatRep camR)
 
 	Vector2D<float> grad(3,4);
 
-	QuatRep iGrad = QuatRep(0, 1, 0, 0)*rot;
-	QuatRep jGrad = QuatRep(0, 0, 1, 0)*rot;
+	QuatRep iGrad = d1*rot;
+	QuatRep jGrad = d2*rot;
 
 	//cursed
 	grad.At(0, 0) = iGrad.s; grad.At(1, 0) = jGrad.s; grad.At(2, 0) = unstandard.s;
@@ -964,4 +993,81 @@ QuatRep QuatKDerLR(VectorRef<QuatRep> rotZ, QuatRep move)
 		}
 	}
 	return hold*move;
+}
+
+float TestMag(QuatRep dir, float dist)
+{
+
+	float expMag1;
+	float expMag2;
+	int sign1 = 1;
+	int sign2 = -1;
+
+	//calculate mag by projecting to dir, then squaring that and the other components
+	QuatRep test = QuatExp(dir*dist);
+	float testProj = dir.Dot(test)/dir.Dot(dir);
+	expMag1 = (testProj*testProj)+(test.s*test.s)+(test.j*test.j)+(test.k*test.k);
+	/*if (expMag1 < 1.0f)
+	{
+	sign1 = -1;
+	expMag1 = 1.0f/expMag1;
+	}*/
+
+	test = QuatExp(dir*-dist);
+	testProj = dir.Dot(test)/dir.Dot(dir);
+	expMag2 = (testProj*testProj)+(test.s*test.s)+(test.j*test.j)+(test.k*test.k);
+	/*if (expMag2 < 1.0f)
+	{
+	sign2 = 1;
+	expMag2 = 1.0f/expMag2;
+	}*/
+
+	if (expMag2 > expMag1)
+	{
+		expMag1 = expMag2;
+		sign1 = sign2;
+	}
+	expMag1 = glm::sqrt(expMag1);
+
+	return expMag1;
+}
+
+QuatRep AntiScaleDir(QuatRep dir)
+{
+	QuatRep i2 = dir*dir;
+	QuatRep dirProj = dir; dirProj.s = 0;
+	
+
+	//square it => project it by checking i coeff versus i coeff of dir => get scaler from i/2
+	//e.g. if dir = 2i and square has i coeff = 6i, then basis convert would be 3i - some scalar
+	dir.s -= i2.Dot(dirProj)/(2*dirProj.Dot(dirProj));
+
+	if (isnan(dir.s))
+		dir.s = 0;
+	return dir;
+
+	float dist = 9;
+	float coeff = 1;
+
+	for (int i = 0; i < 80; i++)
+	{
+		float expC = TestMag(dir, dist);
+		float expL = TestMag(dir-QuatRep(coeff, 0, 0, 0), dist);
+		float expR = TestMag(dir+QuatRep(coeff, 0, 0, 0), dist);
+
+		if (expR < expL && expR < expC)
+			dir = dir+QuatRep(coeff, 0, 0, 0);
+		else if (expL < expC)
+			dir = dir-QuatRep(coeff, 0, 0, 0);
+		else
+			coeff /= 2;
+
+		if (coeff <= 0.000001)
+			break;
+
+		//float test2 = (glm::log(expMag1)/dist)/coeff;
+		//dir = dir - QuatRep(sign1*glm::log(expMag1)/(coeff*dist), 0, 0, 0);
+
+	}
+	return dir;
 }

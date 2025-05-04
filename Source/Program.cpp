@@ -25,8 +25,8 @@ const float RAD_TO_DEG = 180.0f/3.1415926535f;
 //view and compare primary exp group of {(1+i),(1+j)} and {(1+i),(2+j)}
 
 //To Do:
-//
-//Divide output into grid, find inverse of center of grid, use that as initial approx for reps in that grid block, hopefully should allow for high accuracy, less flickering, and only one computation per object
+//Test random 3D QuatReps to see if reasonable results can be found
+//If that works, try 4D
 
 int CPPBindingTest();
 
@@ -67,7 +67,8 @@ public:
 		//approx = QuatRep(0, 0, 0, 0);
 		QuatRep test = camI*position;
 		//QuatRep testApprox = grid.GetApprox(test);
-		approx = (camI*position).InvGeoExp(approx,1);
+		QuatRep testApprox = loopApprox.TryLoopQuot(approx);
+		approx = (camI*position).InvGeoExp(testApprox,1);
 		QuatRep test2 = QuatGeoExp(approx);
 		QuatRep approxAdj = approx.MoveAdjust(camR);
 		float x = (approxAdj.i*0.25f*halfscreeny)+halfscreeny; float y = (-approxAdj.j*0.25f*halfscreeny)+halfscreeny;
@@ -100,14 +101,17 @@ int main()
 {
 	std::cout << "test";
 	
+	//CPPBindingTest();
+	//return 0;
+	
 	loopApprox.Generate();
+
+	QuatRep testyyyy = loopApprox.TryLoopQuot(loopApprox._movBase[5]*glm::sqrt(1.0f/loopApprox._movBase[5].SqrMag())*loopApprox.loopAssocQuotMag[5]*1.2f);
 
 	SymExp bruh;
 	bruh.terms.push_back(Product(1, 1, 2));
 	std::cout << bruh.ToString() << '\n';
 	
-	//CPPBindingTest();
-	//return 0;
 
 	sf::RenderWindow window;
 	window.create(sf::VideoMode(screenx, screeny), "Display");
@@ -160,13 +164,48 @@ int main()
 		}
 	}
 
-	QuatRep last;
+	QuatRep last(1,0,0,0);
 	for (int t = 1; t < 150; t++)
 	{
-		QuatRep quat = QuatExp(t*0.02, t*3.14159*2.0f/50.0f, 0, 0);
+		QuatRep quat = QuatGeoExp(t*0.02, 0, 0);
 		//std::cout << quat.ToString() << '\n';
-		//rects.push_back(CreateLine(last.s/4.0f,last.i/4.0f,quat.s/4.0f,quat.i/4.0f));
+		rects.push_back(CreateLine(last.s/4.0f,last.i/4.0f,quat.s/4.0f,quat.i/4.0f));
 		last = quat;
+	}
+	for (int i = 0; i < loopApprox.loopAssocQuotMag.size() - 2; i++)
+	{
+		if (i == 48 || i == 49)
+			continue;
+		if (loopApprox.loopAssocQuotMag[i] > 0 && loopApprox.loopAssocQuotMag[i+2] > 0)
+		{
+			glm::vec2 p1 = glm::normalize(glm::vec2(loopApprox._movBase[i].i,loopApprox._movBase[i].j)) * loopApprox.loopAssocQuotMag[i]*1.1f;
+			glm::vec2 p2 = glm::normalize(glm::vec2(loopApprox._movBase[i+2].i,loopApprox._movBase[i+2].j)) * loopApprox.loopAssocQuotMag[i+2]*1.1f;
+			rects.push_back(CreateLine(p1.x/4.0f,p1.y/4.0f,p2.x/4.0f,p2.y/4.0f));
+			rects.back().setFillColor(sf::Color(0,128,0));
+
+			p1 = glm::vec2(loopApprox.loopAssocQuot[i].i, loopApprox.loopAssocQuot[i].j);
+			p2 = glm::vec2(loopApprox.loopAssocQuot[i+2].i, loopApprox.loopAssocQuot[i+2].j);
+			rects.push_back(CreateLine(p1.x/4.0f,p1.y/4.0f,p2.x/4.0f,p2.y/4.0f));
+			rects.back().setFillColor(sf::Color(128,0,128));
+		}
+	}
+	{
+		for (int i = 0; i < -1; i++)
+		{
+			int back = loopApprox.loopAssocQuotMag.size()-2;
+			if (loopApprox.loopAssocQuotMag[0+i] > 0 && loopApprox.loopAssocQuotMag[back+i] > 0)
+			{
+				glm::vec2 p1 = glm::normalize(glm::vec2(loopApprox._movBase[0+i].i, loopApprox._movBase[0+i].j)) * loopApprox.loopAssocQuotMag[0+i]*1.1f;
+				glm::vec2 p2 = glm::normalize(glm::vec2(loopApprox._movBase[back+i].i, loopApprox._movBase[back+i].j)) * loopApprox.loopAssocQuotMag[back+i]*1.1f;
+				rects.push_back(CreateLine(p1.x/4.0f, p1.y/4.0f, p2.x/4.0f, p2.y/4.0f));
+				rects.back().setFillColor(sf::Color(0, 128, 0));
+
+				p1 = glm::vec2(loopApprox.loopAssocQuot[0+i].i, loopApprox.loopAssocQuot[0+i].j);
+				p2 = glm::vec2(loopApprox.loopAssocQuot[back+i].i, loopApprox.loopAssocQuot[back+i].j);
+				rects.push_back(CreateLine(p1.x/4.0f,p1.y/4.0f,p2.x/4.0f,p2.y/4.0f));
+				rects.back().setFillColor(sf::Color(128,0,128));
+			}
+		}
 	}
 	rects.push_back(CreateLine(0,-1,0,1));
 	rects.push_back(CreateLine(-1,0,1,0));
@@ -227,7 +266,7 @@ int main()
 		}
 
 		placementTimer -= deltaT;
-		if (placementTimer <= 0 && circles.size() < 20)
+		if (placementTimer <= 0 && circles.size() < 20 && false)
 		{
 			placementTimer = 0.2f;
 			circles.push_back(camera);
@@ -250,20 +289,19 @@ int main()
 		if (sf::Keyboard::isKeyPressed(sf::Keyboard::Q))
 			camera *= QuatGeoExp(0, 0, -1.0f*deltaT);
 
+		//apparently exp(i)exp(j) isn't necessarily exp(i+j) if they commute. Also for Q and E above, neither of them lie on (i+j) line, which Q should since moving in that direction leads to Q. Inv exp should return (-2,-2,0) which is weird 
+
 		//camera *= QuatGeoExp(moveVec);
+
+		if (std::isnan(camera.s))
+			camera = QuatRep(1, 0, 0, 0);
+
 		camera = camera.LocalMove(moveVec.i, moveVec.j);
+		//camera *= QuatGeoExp(moveVec.i, moveVec.j, 0);
 		QuatRep camR = QuatRotExp(camera.InvGeoExp().k);
 		QuatRep camI = camera.Inverse();
 		
 		window.clear();
-
-		QuatRep testPrev;
-		for (int i = 0; i < 40; i++)
-		{
-			QuatRep next = testPrev*QuatGeoExp(0.2f, 0, 0);
-			window.draw(CreateLine(testPrev.s/4.0f, testPrev.i/4.0f, next.s/4.0f, next.i/4.0f));
-			testPrev = next;
-		}
 
 		rotateTimer += deltaT*0.5f;
 		if (rotateTimer >= 3.14159f*2.0f)

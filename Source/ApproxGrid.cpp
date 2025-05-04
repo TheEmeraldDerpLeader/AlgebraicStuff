@@ -190,25 +190,28 @@ void ApproxGrid::Generate(int countInt, float gridWidthFloat, int sCountInt, flo
 
 void LoopApprox::Generate()
 {
-	float startDist = 0.2f;
+	if (gridCount%2 == 1)
+		gridCount++;
+
+	float startDist = 0.02f;
 
 	{
 		std::vector<QuatRep> points;
 		std::vector<QuatRep> pointsBase;
 		std::vector<QuatRep> pointsExp;
 		std::vector<QuatRep> pointsBaseExp;
-		for (int x = 0; x <= 24; x++) //maybe separate into multiple loops when trying to check approx against array
+		for (int x = 0; x <= gridCount; x++) //maybe separate into multiple loops when trying to check approx against array
 		{
-			QuatRep p(0, -1.0f+(x/12.0f), -1, 0);
+			QuatRep p(0, -1.0f+(x*2.0f/gridCount), -1, 0);
 			pointsBase.push_back(p*startDist/glm::sqrt(p.SqrMag()));
-			p = QuatRep(0, -1.0f+(x/12.0f), 1, 0);
+			p = QuatRep(0, -1.0f+(x*2.0f/gridCount), 1, 0);
 			pointsBase.push_back(p*startDist/glm::sqrt(p.SqrMag()));
 		}
-		for (int x = 1; x < 24; x++) //maybe separate into multiple loops when trying to check approx against array
+		for (int x = 0; x <= gridCount; x++) //maybe separate into multiple loops when trying to check approx against array
 		{
-			QuatRep p(0, -1, -1.0f+(x/12.0f), 0);
+			QuatRep p(0, -1, -1.0f+(x*2.0f/gridCount), 0);
 			pointsBase.push_back(p*startDist/glm::sqrt(p.SqrMag()));
-			p = QuatRep(0, 1, -1.0f+(x/12.0f), 0);
+			p = QuatRep(0, 1, -1.0f+(x*2.0f/gridCount), 0);
 			pointsBase.push_back(p*startDist/glm::sqrt(p.SqrMag()));
 		}
 		//                   (furthest dif in 1 axis) * (dim), actual dist is related to sqrt of dim so this works as a maximum
@@ -222,16 +225,18 @@ void LoopApprox::Generate()
 		{
 			points[i] = QuatRep(0, 0, 0, 0);
 
-			pointsBaseExp[i] = QuatExp(pointsBase[i]);
+			pointsBaseExp[i] = QuatGeoExp(pointsBase[i]);
 			pointsExp[i] = QuatRep(1, 0, 0, 0);
 		}
 
 		loopAssocMov.resize(points.size());
 		for (int i = 0; i < loopAssocMov.size(); i++) loopAssocMov[i] = QuatRep(1, 0, 0, 0);
+		loopAssocMovMag.resize(points.size());
+		for (int i = 0; i < loopAssocMov.size(); i++) loopAssocMovMag[i] = -1;
 
-		for (int count = 0; count < 40; count++)
+		for (int count = 0; count < 1000; count++)
 		{
-			ignoreDist += ignoreDistBase;
+ 			ignoreDist += ignoreDistBase;
 			for (int i = 0; i < points.size(); i++)
 			{
 				points[i] += pointsBase[i];
@@ -247,6 +252,8 @@ void LoopApprox::Generate()
 				QuatRep eiQ = pointsExp[i];
 
 				float maxAdjacent = 0;
+				if (count > 3)
+					maxAdjacent = 0.9f*startDist;
 				float minNonAdj = INFINITY;
 				int minNonAdjIndex = i;
 				for (int j = 0; j < points.size(); j++)
@@ -255,10 +262,18 @@ void LoopApprox::Generate()
 					QuatRep ejQ = pointsExp[j];
 					if (j == i)
 						continue;
+
+					float dot = (iQ.s*jQ.s)+(iQ.i*jQ.i)+(iQ.j*jQ.j)+(iQ.k*jQ.k);
+					if (dot > 0)
+						continue;
+
+
 					QuatRep dif = iQ-jQ;
 					QuatRep eDif = eiQ-ejQ;
 					if (dif.SqrMag() <= ignoreDist)
 					{
+						if (count > 3)
+							continue;
 						if (eDif.SqrMag() > maxAdjacent)
 							maxAdjacent = eDif.SqrMag();
 					}
@@ -281,11 +296,13 @@ void LoopApprox::Generate()
 		}
 	}
 
+	std::vector<QuatRep> rotPointsBaseExp;
+	std::vector<QuatRep> rotPointsBase;
 	{
 		std::vector<QuatRep> points;
-		std::vector<QuatRep> pointsBase;
+		std::vector<QuatRep>& pointsBase = rotPointsBase;
 		std::vector<QuatRep> pointsExp;
-		std::vector<QuatRep> pointsBaseExp;
+		std::vector<QuatRep>& pointsBaseExp = rotPointsBaseExp;
 		{
 			QuatRep p(0, 0, 0, -1);
 			pointsBase.push_back(p*startDist/glm::sqrt(p.SqrMag()));
@@ -303,14 +320,16 @@ void LoopApprox::Generate()
 		{
 			points[i] = QuatRep(0,0,0,0);
 
-			pointsBaseExp[i] = QuatExp(pointsBase[i]);
+			pointsBaseExp[i] = QuatGeoExp(pointsBase[i]);
 			pointsExp[i] = QuatRep(1,0,0,0);
 		}
 
 		loopAssocRot.resize(points.size());
 		for (int i = 0; i < loopAssocRot.size(); i++) loopAssocRot[i] = QuatRep(1, 0, 0, 0);
+		loopAssocRotMag.resize(points.size());
+		for (int i = 0; i < loopAssocRot.size(); i++) loopAssocRotMag[i] = -1;
 
-		for (int count = 0; count < 40; count++)
+		for (int count = 0; count < 1000; count++)
 		{
 			ignoreDist += ignoreDistBase;
 			for (int i = 0; i < points.size(); i++)
@@ -361,14 +380,347 @@ void LoopApprox::Generate()
 			}
 		}
 	}
+
+	//Quotient space associations
+	std::vector<QuatRep> rotSpace;
+	std::vector<QuatRep> rotExpSpace;
+	rotSpace.push_back(QuatRep(0, 0, 0, 0));
+	rotExpSpace.push_back(QuatRep(1, 0, 0, 0));
+	for (int i = 0; i < rotPointsBaseExp.size(); i++)
+	{
+		QuatRep expB = rotPointsBaseExp[i];
+		QuatRep exp = QuatRep(1,0,0,0);
+		QuatRep base = rotPointsBase[i];
+		int magCount = int(0.5f+(loopAssocRotMag[i]/startDist));
+		if (loopAssocRotMag[i] < 0)
+			magCount = 40;
+		for (int i = 0; i < magCount; i++)
+		{
+			exp *= expB;
+			rotSpace.push_back(base*i);
+			rotExpSpace.push_back(exp);
+		}
+	}
+	{
+		std::vector<QuatRep> points;
+		std::vector<QuatRep> pointsBase;
+		std::vector<QuatRep> pointsExp;
+		std::vector<QuatRep> pointsBaseExp;
+		for (int x = 0; x <= gridCount; x++) //maybe separate into multiple loops when trying to check approx against array
+		{
+			QuatRep p(0, -1.0f+(x*2.0f/gridCount), -1, 0);
+			pointsBase.push_back(p*startDist/glm::sqrt(p.SqrMag()));
+			p = QuatRep(0, -1.0f+(x*2.0f/gridCount), 1, 0);
+			pointsBase.push_back(p*startDist/glm::sqrt(p.SqrMag()));
+		}
+		for (int x = 0; x <= gridCount; x++) //maybe separate into multiple loops when trying to check approx against array
+		{
+			QuatRep p(0, -1, -1.0f+(x*2.0f/gridCount), 0);
+			pointsBase.push_back(p*startDist/glm::sqrt(p.SqrMag()));
+			p = QuatRep(0, 1, -1.0f+(x*2.0f/gridCount), 0);
+			pointsBase.push_back(p*startDist/glm::sqrt(p.SqrMag()));
+		}
+		_movBase = pointsBase; //useful vector for debugging
+
+		//                   (furthest dif in 1 axis) * (dim), actual dist is related to sqrt of dim so this works as a maximum
+		float ignoreDistBase = (pointsBase[0]-pointsBase[2]).SqrMag()*2; //if sqr mag of points is less than this, then these points are adjacent
+		float ignoreDist = 0;
+
+		points.resize(pointsBase.size());
+		pointsBaseExp.resize(pointsBase.size());
+		pointsExp.resize(pointsBase.size());
+		for (int i = 0; i < pointsBase.size(); i++)
+		{
+			points[i] = QuatRep(0, 0, 0, 0);
+
+			pointsBaseExp[i] = QuatGeoExp(pointsBase[i]);
+			pointsExp[i] = QuatRep(1, 0, 0, 0);
+		}
+
+		loopAssocQuot.resize(points.size());
+		for (int i = 0; i < loopAssocQuot.size(); i++) loopAssocQuot[i] = QuatRep(1, 0, 0, 0);
+		loopAssocQuotMag.resize(points.size());
+		for (int i = 0; i < loopAssocQuot.size(); i++) loopAssocQuotMag[i] = -1;
+
+		for (int count = 0; count < 1000; count++)
+		{
+			ignoreDist += ignoreDistBase;
+			for (int i = 0; i < points.size(); i++)
+			{
+				points[i] += pointsBase[i];
+				pointsExp[i] *= pointsBaseExp[i];
+			}
+
+			for (int i = 0; i < points.size(); i++)
+			{
+				if (loopAssocQuot[i].s != 1)
+					continue;
+				
+				float maxAdjacent = 0;
+				if (count > 0.6f/startDist)
+					maxAdjacent = 2.9f*startDist;
+				float minNonAdj = INFINITY;
+				int minNonAdjIndex = i;
+				int minK = 0;
+				for (int k = 0; k < rotExpSpace.size(); k++)
+				{
+					QuatRep iQ = points[i];
+					QuatRep eiQ = pointsExp[i]*rotExpSpace[k];
+
+					for (int j = 0; j < points.size(); j++)
+					{
+						QuatRep jQ = points[j];
+						QuatRep ejQ = pointsExp[j];
+						if (j == i)
+							continue;
+
+						float dot = (iQ.s*jQ.s)+(iQ.i*jQ.i)+(iQ.j*jQ.j)+(iQ.k*jQ.k);
+						if (dot > 0)
+							continue;
+
+
+						QuatRep dif = iQ-jQ;
+						QuatRep eDif = eiQ-ejQ;
+						if (dif.SqrMag() <= ignoreDist)
+						{
+							if (count > 3)
+								continue;
+							if (eDif.SqrMag() > maxAdjacent)
+								maxAdjacent = eDif.SqrMag();
+						}
+						else
+						{
+							if (eDif.SqrMag() < minNonAdj)
+							{
+								minNonAdj = eDif.SqrMag();
+								minNonAdjIndex = j;
+								minK = k;
+							}
+						}
+					}
+
+				}
+					if (minNonAdj < maxAdjacent)
+					{
+						loopAssocQuot[i] = points[minNonAdjIndex];
+						loopAssocQuot[i] -= rotSpace[minK];
+						loopAssocQuotMag[i] = glm::sqrt(points[i].SqrMag());
+					}
+			}
+		}
+	}
+
+	//create quotloop
+	//like mov loop, but take that growing circle and cart product it with a grid on rot space
+	//get grid on rot space by taking all dirs on rot space, then adding points along that dir until loopMag is reached on that dir
+	//maybe make quotloop higher dim than movloop
 }
 
-QuatRep LoopApprox::TryLoop(QuatRep trans)
+QuatRep LoopApprox::TryLoop(QuatRep localTrans)
 {
+	//convert to geo exp basis
+	QuatRep mLocalTrans(0,0,0,0);
+	mLocalTrans.i = localTrans.Dot(QuatRepDirs::d1)/QuatRepDirs::d1.Dot(QuatRepDirs::d1);
+	mLocalTrans.j = localTrans.Dot(QuatRepDirs::d2)/QuatRepDirs::d2.Dot(QuatRepDirs::d2);
+	mLocalTrans.k = localTrans.Dot(QuatRepDirs::r1)/QuatRepDirs::r1.Dot(QuatRepDirs::r1);
+	//localTrans = mLocalTrans;
+
+	QuatRep original = localTrans;
+
+	localTrans.s = 0;
+	//mov looping
+	QuatRep movHold = localTrans; movHold.k = 0;
+
+	float max = 0;
+	int plane = -1;
+	if (glm::abs(localTrans.i) > max) { max = glm::abs(localTrans.i); plane = 1; } if (glm::abs(localTrans.j) > max) { max = glm::abs(localTrans.j); plane = 0; }
+	if (max == 0)
+		plane = -1;
+	localTrans /= max;
+
+	switch (plane)
+	{
+	case 0:
+	{
+		bool isPos = false;
+		if (localTrans.i > 0)
+			isPos = true;
+
+		localTrans.i += 1.0f;
+		localTrans.i *= gridCount/2.0f;
+		int index = int(localTrans.i+0.5f);
+
+		QuatRep loop = loopAssocMov[(index*2)+isPos];
+		if (loop.s == 1)
+			break;
+
+		float loopMag = loopAssocMovMag[(index*2)+isPos];
+		float mag = glm::sqrt(movHold.SqrMag());
+
+		if (mag > loopMag*1.1f)
+			movHold = loop*(2.0f-(mag/loopMag));
+		break;
+	}
+	case 1:
+	{
+		bool isPos = false;
+		if (localTrans.j > 0)
+			isPos = true;
+
+		localTrans.j += 1.0f;
+		localTrans.j *= gridCount/2.0f;
+		int index = int(localTrans.j+0.5f);
+
+		QuatRep loop = loopAssocMov[((gridCount+1)*2)+(index*2)+isPos];
+		if (loop.s == 1)
+			break;
+
+		float loopMag = loopAssocMovMag[((gridCount+1)*2)+(index*2)+isPos];
+		float mag = glm::sqrt(movHold.SqrMag());
+
+		if (mag > loopMag*1.1f)
+			movHold = loop*(2.0f-(mag/loopMag));
+		break;
+	}
+	default: break;
+	}
+
+	//rot looping
+	localTrans = original;
+	QuatRep rotHold = localTrans; rotHold.i = 0; rotHold.j = 0;
+	
+	localTrans = rotHold;
+	max = glm::abs(localTrans.k);
+	if (max == 0)
+		return movHold+rotHold;
+	localTrans /= max;
+
+	bool isPos = false;
+	if (localTrans.k > 0)
+		isPos = true;
+
+	int index = 0;
+
+	QuatRep loop = loopAssocRot[(index*2)+isPos];
+	if (loop.s == 1)
+		return movHold+rotHold;
+
+	float loopMag = loopAssocRotMag[(index*2)+isPos];
+	float mag = glm::sqrt(rotHold.SqrMag());
+
+	if (mag > loopMag*1.1f)
+		rotHold = loop*(2.0f-(mag/loopMag));
+	
 	//convert trans to cubal coords
 	//Get loop mag and assoc using grid indexing depending on face of cube
 	//if no assoc, ignore
 	//if glm::sqrt(trans.SqrMag()) < loop mag * 1.1, then ignore
 	//otherwise, trans = assoc*(2-transMag) (assumes aligned tangent space is direct negation, e.g. sphere or axes of torus : exp(1 + 0.1) = exp(1 - 0.1) )
-	return QuatRep();
+
+	mLocalTrans = movHold+rotHold;
+	return mLocalTrans;
+	//return (QuatRepDirs::d1*mLocalTrans.i)+(QuatRepDirs::d2*mLocalTrans.j)+(QuatRepDirs::r1*mLocalTrans.k);
+}
+
+QuatRep LoopApprox::TryLoopQuot(QuatRep localTrans)
+{
+	//convert to geo exp basis
+	QuatRep mLocalTrans(0,0,0,0);
+	mLocalTrans.i = localTrans.Dot(QuatRepDirs::d1)/QuatRepDirs::d1.Dot(QuatRepDirs::d1);
+	mLocalTrans.j = localTrans.Dot(QuatRepDirs::d2)/QuatRepDirs::d2.Dot(QuatRepDirs::d2);
+	mLocalTrans.k = localTrans.Dot(QuatRepDirs::r1)/QuatRepDirs::r1.Dot(QuatRepDirs::r1);
+	//unused bruzz
+
+	//localTrans = mLocalTrans;
+
+	QuatRep original = localTrans;
+
+	localTrans.s = 0;
+	//quotient looping
+	QuatRep movHold = localTrans; movHold.k = 0;
+
+	float max = 0;
+	int plane = -1;
+	if (glm::abs(localTrans.i) > max) { max = glm::abs(localTrans.i); plane = 1; } if (glm::abs(localTrans.j) > max) { max = glm::abs(localTrans.j); plane = 0; }
+	if (max == 0)
+		plane = -1;
+	localTrans /= max;
+
+	switch (plane)
+	{
+	case 0:
+	{
+		bool isNeg = true;
+		if (localTrans.i > 0)
+			isNeg = false;
+
+		localTrans.i += 1.0f;
+		localTrans.i *= gridCount/2.0f;
+		int index = int(localTrans.i+0.5f);
+
+		QuatRep loop = loopAssocQuot[(index*2)+isNeg];
+		if (loop.s == 1)
+			break;
+
+		float loopMag = loopAssocQuotMag[(index*2)+isNeg];
+		float mag = glm::sqrt(movHold.SqrMag());
+
+		if (mag > loopMag*1.1f)
+			movHold = loop*(2.0f-(mag/loopMag));
+		break;
+	}
+	case 1:
+	{
+		bool isNeg = true;
+		if (localTrans.j > 0)
+			isNeg = false;
+
+		localTrans.j += 1.0f;
+		localTrans.j *= gridCount/2.0f;
+		int index = int(localTrans.j+0.5f);
+
+		QuatRep loop = loopAssocQuot[((gridCount+1)*2)+(index*2)+isNeg];
+		if (loop.s == 1)
+			break;
+
+		float loopMag = loopAssocQuotMag[((gridCount+1)*2)+(index*2)+isNeg];
+		float mag = glm::sqrt(movHold.SqrMag());
+
+		if (mag > loopMag*1.1f)
+			movHold = loop*(2.0f-(mag/loopMag));
+		break;
+	}
+	default: break;
+	}
+
+	//rot looping
+	localTrans = original;
+	QuatRep rotHold = localTrans; rotHold.i = 0; rotHold.j = 0;
+
+	localTrans = rotHold;
+	max = glm::abs(localTrans.k);
+	if (max == 0)
+		return movHold+rotHold;
+	localTrans /= max;
+
+	bool isPos = false;
+	if (localTrans.k > 0)
+		isPos = true;
+
+	int index = 0;
+
+	QuatRep loop = loopAssocRot[(index*2)+isPos];
+	if (loop.s == 1)
+		return movHold+rotHold;
+
+	float loopMag = loopAssocRotMag[(index*2)+isPos];
+	float mag = glm::sqrt(rotHold.SqrMag());
+
+	if (mag > loopMag*1.1f)
+		rotHold = loop*(2.0f-(mag/loopMag));
+
+
+	mLocalTrans = movHold+rotHold;
+	return mLocalTrans;
+	//return (QuatRepDirs::d1*mLocalTrans.i)+(QuatRepDirs::d2*mLocalTrans.j)+(QuatRepDirs::r1*mLocalTrans.k);
 }

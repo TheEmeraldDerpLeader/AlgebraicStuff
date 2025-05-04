@@ -31,13 +31,22 @@ public:
 
 class LoopApprox
 {
+public:
+	int gridCount = 96;
+
 	std::vector<float> loopAssocMovMag;
 	std::vector<QuatRep> loopAssocMov;
 	//potentially another vector that describes how aligned tangent spaces compare, e.g. for torus, tangent space of <1,1> is same as <1,-1> but reflected along y axis\
 	so when mapping, <1,1>*1.1 should get mapped to <1,-1> + <1,1>*0.1, not <1,-1>*1.1
 	std::vector<float> loopAssocRotMag;
 	std::vector<QuatRep> loopAssocRot;
-public:
+
+	std::vector<float> loopAssocQuotMag;
+	std::vector<QuatRep> loopAssocQuot;
+
+	std::vector<QuatRep> _movBase;
+
 	void Generate();
-	QuatRep TryLoop(QuatRep trans);
+	QuatRep TryLoop(QuatRep localTrans);
+	QuatRep TryLoopQuot(QuatRep localTrans);
 };

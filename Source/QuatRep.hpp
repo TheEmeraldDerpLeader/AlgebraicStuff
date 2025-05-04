@@ -53,9 +53,16 @@ public:
 	std::string ToString();
 };
 
+namespace QuatRepDirs
+{
+	extern thread_local QuatRep d1;
+	extern thread_local QuatRep d2;
+	extern thread_local QuatRep r1;
+};
+
+
 QuatRep QuatExp(float s, float i, float j, float k);
 QuatRep QuatExp(QuatRep quat);
-
 
 QuatRep QuatGeoExp(float x, float y, float r);
 QuatRep QuatGeoExp(QuatRep v); //don't have float3, so just use last 3 components
@@ -75,3 +82,5 @@ QuatRep QuatKDer(VectorRef<QuatRep> rotZ, QuatRep move);
 QuatRep QuatIDerLR(VectorRef<QuatRep> moveZ, QuatRep rot);
 QuatRep QuatJDerLR(VectorRef<QuatRep> moveZ, QuatRep rot);
 QuatRep QuatKDerLR(VectorRef<QuatRep> rotZ, QuatRep move);
+
+QuatRep AntiScaleDir(QuatRep dir);
